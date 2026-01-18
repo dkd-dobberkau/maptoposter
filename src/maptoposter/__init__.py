@@ -26,6 +26,28 @@ PAPER_SIZES: dict[str, tuple[float, float]] = {
 # Bleed for print-ready PDFs in mm
 BLEED_MM = 3
 
+
+def get_aspect_ratio(paper_size: str = "A4", orientation: str = "portrait") -> float:
+    """
+    Calculate aspect ratio (width/height) for a paper size and orientation.
+
+    Args:
+        paper_size: Paper size (A3, A4, A5)
+        orientation: portrait, landscape, or square
+
+    Returns:
+        Aspect ratio as width/height
+    """
+    width_mm, height_mm = PAPER_SIZES.get(paper_size, PAPER_SIZES["A4"])
+
+    if orientation == "landscape":
+        width_mm, height_mm = height_mm, width_mm
+    elif orientation == "square":
+        size = min(width_mm, height_mm)
+        width_mm, height_mm = size, size
+
+    return width_mm / height_mm
+
 # Default theme as fallback
 DEFAULT_THEME: dict[str, Any] = {
     "name": "feature_based",
@@ -365,10 +387,20 @@ def create_poster_figure(
     country: str,
     theme_name: str = "feature_based",
     distance: int = 29000,
-    show_progress: bool = True
+    show_progress: bool = True,
+    aspect_ratio: float | None = None,
 ) -> tuple[plt.Figure, float, float]:
     """
     Create a map poster figure without saving.
+
+    Args:
+        city: City name
+        country: Country name
+        theme_name: Theme to use
+        distance: Map radius in meters
+        show_progress: Print progress messages
+        aspect_ratio: Width/height ratio (e.g., 0.707 for A4 portrait).
+                      If None, uses default 12:16 (0.75) ratio.
 
     Returns:
         Tuple of (figure, latitude, longitude)
@@ -421,7 +453,14 @@ def create_poster_figure(
     if show_progress:
         print("Rendering poster...")
 
-    fig, ax = plt.subplots(figsize=(12, 16), facecolor=theme["bg"])
+    # Calculate figure size based on aspect ratio
+    fig_height = 16  # Base height in inches
+    if aspect_ratio is not None:
+        fig_width = fig_height * aspect_ratio
+    else:
+        fig_width = 12  # Default width (3:4 ratio)
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=theme["bg"])
     ax.set_facecolor(theme["bg"])
 
     # Plot water
@@ -674,6 +713,7 @@ __all__ = [
     "create_poster",
     "create_poster_figure",
     "export_pdf",
+    "get_aspect_ratio",
     "get_coordinates",
     "load_theme",
     "list_themes",

@@ -18,6 +18,7 @@ from maptoposter import (
     create_poster,
     create_poster_figure,
     export_pdf,
+    get_aspect_ratio,
     get_coordinates,
     list_themes,
     load_theme,
@@ -204,13 +205,20 @@ def main():
             if st.button("🎨 Create Poster", type="primary", use_container_width=True):
                 with st.spinner("Generating poster... This may take a minute."):
                     try:
+                        # Calculate aspect ratio for PDF format
+                        if format_choice == "PDF":
+                            aspect_ratio = get_aspect_ratio(paper_size, orientation.lower())
+                        else:
+                            aspect_ratio = None  # Use default 3:4 ratio for PNG
+
                         # Create poster figure
                         fig, _, _ = create_poster_figure(
                             city=city,
                             country=country,
                             theme_name=theme_name,
                             distance=distance,
-                            show_progress=False
+                            show_progress=False,
+                            aspect_ratio=aspect_ratio,
                         )
 
                         # Store in session state for download
