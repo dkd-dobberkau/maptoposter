@@ -1,0 +1,15 @@
+{
+  "name": "midnight_blue",
+  "description": "Navy background with gold roads",
+  "bg": "#0D1B2A",
+  "text": "#E0C097",
+  "gradient_color": "#0D1B2A",
+  "water": "#1B263B",
+  "parks": "#1B3A2F",
+  "road_motorway": "#E0C097",
+  "road_primary": "#C9A86C",
+  "road_secondary": "#A68A4A",
+  "road_tertiary": "#8B7355",
+  "road_residential": "#6B5B4F",
+  "road_default": "#7A6A5A"
+}

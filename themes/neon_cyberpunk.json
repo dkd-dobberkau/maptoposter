@@ -1,0 +1,15 @@
+{
+  "name": "neon_cyberpunk",
+  "description": "Dark with electric pink/cyan",
+  "bg": "#0D0221",
+  "text": "#FF2A6D",
+  "gradient_color": "#0D0221",
+  "water": "#05D9E8",
+  "parks": "#1A472A",
+  "road_motorway": "#FF2A6D",
+  "road_primary": "#D300C5",
+  "road_secondary": "#9B00FF",
+  "road_tertiary": "#05D9E8",
+  "road_residential": "#01A9B4",
+  "road_default": "#05D9E8"
+}

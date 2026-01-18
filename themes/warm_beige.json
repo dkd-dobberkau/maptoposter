@@ -1,0 +1,15 @@
+{
+  "name": "warm_beige",
+  "description": "Vintage sepia tones",
+  "bg": "#F5F0E6",
+  "text": "#4A4238",
+  "gradient_color": "#F5F0E6",
+  "water": "#D4CFC5",
+  "parks": "#E8E3D9",
+  "road_motorway": "#4A4238",
+  "road_primary": "#5C5447",
+  "road_secondary": "#7A7062",
+  "road_tertiary": "#968C7E",
+  "road_residential": "#B0A898",
+  "road_default": "#A09888"
+}

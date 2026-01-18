@@ -1,0 +1,15 @@
+{
+  "name": "blueprint",
+  "description": "Architectural blueprint aesthetic",
+  "bg": "#1E3A5F",
+  "text": "#FFFFFF",
+  "gradient_color": "#1E3A5F",
+  "water": "#2C4A6E",
+  "parks": "#2A4A5E",
+  "road_motorway": "#FFFFFF",
+  "road_primary": "#E8E8E8",
+  "road_secondary": "#C0D8E8",
+  "road_tertiary": "#A0C0D8",
+  "road_residential": "#80A8C8",
+  "road_default": "#90B0D0"
+}

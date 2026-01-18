@@ -1,0 +1,15 @@
+{
+  "name": "noir",
+  "description": "Pure black background, white roads",
+  "bg": "#0A0A0A",
+  "text": "#FFFFFF",
+  "gradient_color": "#0A0A0A",
+  "water": "#1A1A2E",
+  "parks": "#1A2A1A",
+  "road_motorway": "#FFFFFF",
+  "road_primary": "#E0E0E0",
+  "road_secondary": "#C0C0C0",
+  "road_tertiary": "#A0A0A0",
+  "road_residential": "#808080",
+  "road_default": "#909090"
+}

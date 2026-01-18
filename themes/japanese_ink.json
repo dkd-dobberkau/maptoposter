@@ -1,0 +1,15 @@
+{
+  "name": "japanese_ink",
+  "description": "Minimalist ink wash style",
+  "bg": "#FAF8F5",
+  "text": "#2C2C2C",
+  "gradient_color": "#FAF8F5",
+  "water": "#D4E5ED",
+  "parks": "#E8F0E8",
+  "road_motorway": "#2C2C2C",
+  "road_primary": "#404040",
+  "road_secondary": "#555555",
+  "road_tertiary": "#707070",
+  "road_residential": "#909090",
+  "road_default": "#808080"
+}

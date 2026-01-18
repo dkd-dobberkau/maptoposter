@@ -1,0 +1,15 @@
+{
+  "name": "terracotta",
+  "description": "Mediterranean warmth",
+  "bg": "#F4E9DC",
+  "text": "#8B4513",
+  "gradient_color": "#F4E9DC",
+  "water": "#B8CDD6",
+  "parks": "#C5D4C0",
+  "road_motorway": "#8B4513",
+  "road_primary": "#A0522D",
+  "road_secondary": "#CD853F",
+  "road_tertiary": "#D2956C",
+  "road_residential": "#DEB887",
+  "road_default": "#D2B48C"
+}
