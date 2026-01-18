@@ -566,6 +566,8 @@ def export_pdf(
     paper_size: str = "A4",
     orientation: str = "portrait",
     print_ready: bool = False,
+    rasterize: bool = False,
+    dpi: int = 300,
     output_dir: Path | None = None,
 ) -> bytes:
     """
@@ -578,6 +580,8 @@ def export_pdf(
         paper_size: Paper size (A3, A4, A5)
         orientation: portrait, landscape, or square
         print_ready: Add bleed and crop marks
+        rasterize: If True, convert to image first (simpler for printers)
+        dpi: Resolution for rasterized output (default 300)
         output_dir: Optional output directory (if None, returns bytes only)
 
     Returns:
@@ -614,7 +618,37 @@ def export_pdf(
     # Create PDF in memory
     pdf_buffer = io.BytesIO()
 
-    if print_ready:
+    if rasterize:
+        # Rasterize: convert to PNG first, then embed in PDF
+        # This is much simpler for printers to handle
+        from PIL import Image
+
+        # Render to PNG at high resolution
+        png_buffer = io.BytesIO()
+        fig.savefig(
+            png_buffer,
+            format="png",
+            dpi=dpi,
+            facecolor=bg_color,
+            edgecolor="none",
+        )
+        png_buffer.seek(0)
+
+        # Create new figure with just the image
+        img = Image.open(png_buffer)
+        fig_raster, ax_raster = plt.subplots(figsize=(width_in, height_in))
+        ax_raster.imshow(img)
+        ax_raster.axis("off")
+        fig_raster.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+        fig_raster.savefig(
+            pdf_buffer,
+            format="pdf",
+            facecolor=bg_color,
+            edgecolor="none",
+        )
+        plt.close(fig_raster)
+    elif print_ready:
         # For print-ready, save with bleed already included in dimensions
         fig.savefig(
             pdf_buffer,
@@ -633,7 +667,7 @@ def export_pdf(
         )
         pdf_buffer = io.BytesIO(pdf_with_marks)
     else:
-        # Save at exact paper size
+        # Save at exact paper size (vector)
         fig.savefig(
             pdf_buffer,
             format="pdf",
@@ -655,6 +689,76 @@ def export_pdf(
             f.write(pdf_bytes)
 
     return pdf_bytes
+
+
+def export_eps(
+    fig: plt.Figure,
+    city: str,
+    theme_name: str,
+    paper_size: str = "A4",
+    orientation: str = "portrait",
+    output_dir: Path | None = None,
+) -> bytes:
+    """
+    Export a poster figure as EPS (Encapsulated PostScript).
+
+    EPS is ideal for graphic designers who need to edit the file
+    in Adobe Illustrator or similar software.
+
+    Args:
+        fig: Matplotlib figure to export
+        city: City name (for filename)
+        theme_name: Theme name (for filename)
+        paper_size: Paper size (A3, A4, A5)
+        orientation: portrait, landscape, or square
+        output_dir: Optional output directory (if None, returns bytes only)
+
+    Returns:
+        EPS as bytes
+    """
+    # Get paper dimensions in mm
+    width_mm, height_mm = PAPER_SIZES.get(paper_size, PAPER_SIZES["A4"])
+
+    # Apply orientation
+    if orientation == "landscape":
+        width_mm, height_mm = height_mm, width_mm
+    elif orientation == "square":
+        size = min(width_mm, height_mm)
+        width_mm, height_mm = size, size
+
+    # Convert mm to inches
+    width_in = width_mm / 25.4
+    height_in = height_mm / 25.4
+
+    # Resize figure
+    fig.set_size_inches(width_in, height_in)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+    # Get background color
+    bg_color = fig.get_facecolor()
+
+    # Create EPS in memory
+    eps_buffer = io.BytesIO()
+    fig.savefig(
+        eps_buffer,
+        format="eps",
+        facecolor=bg_color,
+        edgecolor="none",
+    )
+
+    eps_buffer.seek(0)
+    eps_bytes = eps_buffer.getvalue()
+
+    # Optionally save to file
+    if output_dir is not None:
+        output_dir.mkdir(exist_ok=True)
+        orientation_str = orientation[:4]
+        filename = f"{city.lower().replace(' ', '_')}_{theme_name}_{paper_size}_{orientation_str}.eps"
+        output_path = output_dir / filename
+        with open(output_path, "wb") as f:
+            f.write(eps_bytes)
+
+    return eps_bytes
 
 
 def _add_crop_marks(pdf_bytes: bytes, width_mm: float, height_mm: float, bleed_mm: float) -> bytes:
@@ -712,6 +816,7 @@ def _add_crop_marks(pdf_bytes: bytes, width_mm: float, height_mm: float, bleed_m
 __all__ = [
     "create_poster",
     "create_poster_figure",
+    "export_eps",
     "export_pdf",
     "get_aspect_ratio",
     "get_coordinates",

@@ -17,6 +17,7 @@ from streamlit_folium import st_folium
 from maptoposter import (
     create_poster,
     create_poster_figure,
+    export_eps,
     export_pdf,
     get_aspect_ratio,
     get_coordinates,
@@ -127,15 +128,15 @@ def main():
 
         # Format selection
         st.subheader("📄 Format")
-        format_choice = st.radio(
+        format_choice = st.selectbox(
             "Output format",
-            options=["PNG", "PDF"],
-            horizontal=True,
-            help="PNG for digital use, PDF for printing"
+            options=["PNG", "PDF (Raster)", "PDF (Vektor)", "EPS"],
+            index=0,
+            help="PNG: Digital | PDF Raster: Heimdruck | PDF Vektor: Druckerei | EPS: Grafiker"
         )
 
-        # PDF-specific options
-        if format_choice == "PDF":
+        # Paper size options for PDF/EPS
+        if format_choice in ["PDF (Raster)", "PDF (Vektor)", "EPS"]:
             paper_size = st.selectbox(
                 "Paper size",
                 options=list(PAPER_SIZES.keys()),
@@ -205,8 +206,8 @@ def main():
             if st.button("🎨 Create Poster", type="primary", use_container_width=True):
                 with st.spinner("Generating poster... This may take a minute."):
                     try:
-                        # Calculate aspect ratio for PDF format
-                        if format_choice == "PDF":
+                        # Calculate aspect ratio for PDF/EPS formats
+                        if format_choice in ["PDF (Raster)", "PDF (Vektor)", "EPS"]:
                             aspect_ratio = get_aspect_ratio(paper_size, orientation.lower())
                         else:
                             aspect_ratio = None  # Use default 3:4 ratio for PNG
@@ -258,6 +259,9 @@ def main():
                 poster_city = st.session_state["poster_city"]
                 poster_theme = st.session_state["poster_theme"]
 
+                orient_lower = orientation.lower()
+                city_slug = poster_city.lower().replace(' ', '_')
+
                 if format_choice == "PNG":
                     # PNG download
                     png_buffer = io.BytesIO()
@@ -271,56 +275,92 @@ def main():
                     )
                     png_buffer.seek(0)
 
-                    filename = f"{poster_city.lower().replace(' ', '_')}_{poster_theme}.png"
                     st.download_button(
                         label="⬇️ Download PNG",
                         data=png_buffer.getvalue(),
-                        file_name=filename,
+                        file_name=f"{city_slug}_{poster_theme}.png",
                         mime="image/png",
                         use_container_width=True
                     )
-                else:
-                    # PDF downloads
-                    orient_lower = orientation.lower()
-                    col_home, col_print = st.columns(2)
 
-                    with col_home:
-                        pdf_home = export_pdf(
+                elif format_choice == "PDF (Raster)":
+                    # Rasterized PDF - simple for printers
+                    pdf_raster = export_pdf(
+                        fig=fig,
+                        city=poster_city,
+                        theme_name=poster_theme,
+                        paper_size=paper_size,
+                        orientation=orient_lower,
+                        rasterize=True,
+                        dpi=dpi,
+                    )
+                    st.download_button(
+                        label="⬇️ Download PDF (Raster)",
+                        data=pdf_raster,
+                        file_name=f"{city_slug}_{poster_theme}_{paper_size}_{orient_lower[:4]}_raster.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        help="Einfach für Heimdrucker, ~2-3 MB"
+                    )
+
+                elif format_choice == "PDF (Vektor)":
+                    # Vector PDF - for professional printing
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        pdf_vector = export_pdf(
                             fig=fig,
                             city=poster_city,
                             theme_name=poster_theme,
                             paper_size=paper_size,
                             orientation=orient_lower,
-                            print_ready=False
+                            rasterize=False,
                         )
-                        filename_home = f"{poster_city.lower().replace(' ', '_')}_{poster_theme}_{paper_size}_{orient_lower[:4]}.pdf"
                         st.download_button(
-                            label="📄 PDF (Home)",
-                            data=pdf_home,
-                            file_name=filename_home,
+                            label="📄 PDF (Vektor)",
+                            data=pdf_vector,
+                            file_name=f"{city_slug}_{poster_theme}_{paper_size}_{orient_lower[:4]}.pdf",
                             mime="application/pdf",
                             use_container_width=True,
-                            help="Clean PDF for home printing"
+                            help="Skalierbar, für Druckerei"
                         )
 
-                    with col_print:
+                    with col2:
                         pdf_print = export_pdf(
                             fig=fig,
                             city=poster_city,
                             theme_name=poster_theme,
                             paper_size=paper_size,
                             orientation=orient_lower,
-                            print_ready=True
+                            print_ready=True,
+                            rasterize=False,
                         )
-                        filename_print = f"{poster_city.lower().replace(' ', '_')}_{poster_theme}_{paper_size}_{orient_lower[:4]}_printready.pdf"
                         st.download_button(
                             label="🖨️ PDF (Print-Ready)",
                             data=pdf_print,
-                            file_name=filename_print,
+                            file_name=f"{city_slug}_{poster_theme}_{paper_size}_{orient_lower[:4]}_printready.pdf",
                             mime="application/pdf",
                             use_container_width=True,
-                            help="With 3mm bleed for professional printing"
+                            help="Mit 3mm Beschnitt für Druckerei"
                         )
+
+                elif format_choice == "EPS":
+                    # EPS for graphic designers
+                    eps_data = export_eps(
+                        fig=fig,
+                        city=poster_city,
+                        theme_name=poster_theme,
+                        paper_size=paper_size,
+                        orientation=orient_lower,
+                    )
+                    st.download_button(
+                        label="⬇️ Download EPS",
+                        data=eps_data,
+                        file_name=f"{city_slug}_{poster_theme}_{paper_size}_{orient_lower[:4]}.eps",
+                        mime="application/postscript",
+                        use_container_width=True,
+                        help="Für Adobe Illustrator & Co."
+                    )
         else:
             st.info("Enter a valid location to generate a poster")
     
