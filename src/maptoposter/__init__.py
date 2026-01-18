@@ -563,8 +563,11 @@ def export_pdf(
     width_in = width_mm / 25.4
     height_in = height_mm / 25.4
 
-    # Resize figure
+    # Resize figure to exact paper size
     fig.set_size_inches(width_in, height_in)
+
+    # Adjust subplot to fill the page
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
     # Get background color from figure
     bg_color = fig.get_facecolor()
@@ -573,32 +576,30 @@ def export_pdf(
     pdf_buffer = io.BytesIO()
 
     if print_ready:
-        # For print-ready, we need to add crop marks
-        # Save the figure first, then add marks
+        # For print-ready, save with bleed already included in dimensions
         fig.savefig(
             pdf_buffer,
             format="pdf",
-            bbox_inches="tight",
-            pad_inches=BLEED_MM / 25.4,  # Bleed in inches
-            facecolor=bg_color
+            facecolor=bg_color,
+            edgecolor="none",
         )
         pdf_buffer.seek(0)
 
-        # Add crop marks by creating a new figure with marks
+        # Add crop marks
         pdf_with_marks = _add_crop_marks(
             pdf_buffer.getvalue(),
-            width_mm - 2 * BLEED_MM,  # Original size without bleed
+            width_mm - 2 * BLEED_MM,
             height_mm - 2 * BLEED_MM,
             BLEED_MM
         )
         pdf_buffer = io.BytesIO(pdf_with_marks)
     else:
+        # Save at exact paper size
         fig.savefig(
             pdf_buffer,
             format="pdf",
-            bbox_inches="tight",
-            pad_inches=0,
-            facecolor=bg_color
+            facecolor=bg_color,
+            edgecolor="none",
         )
 
     pdf_buffer.seek(0)
