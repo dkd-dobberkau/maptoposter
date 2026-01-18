@@ -14,7 +14,15 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-from maptoposter import create_poster, get_coordinates, list_themes, load_theme
+from maptoposter import (
+    create_poster,
+    create_poster_figure,
+    export_pdf,
+    get_coordinates,
+    list_themes,
+    load_theme,
+    PAPER_SIZES,
+)
 
 
 def get_theme_preview(theme: dict) -> str:
@@ -115,6 +123,32 @@ def main():
             value=300,
             help="Higher DPI = better quality but slower"
         )
+
+        # Format selection
+        st.subheader("📄 Format")
+        format_choice = st.radio(
+            "Output format",
+            options=["PNG", "PDF"],
+            horizontal=True,
+            help="PNG for digital use, PDF for printing"
+        )
+
+        # PDF-specific options
+        if format_choice == "PDF":
+            paper_size = st.selectbox(
+                "Paper size",
+                options=list(PAPER_SIZES.keys()),
+                index=1,  # A4 as default
+                help="Standard paper sizes"
+            )
+            orientation = st.selectbox(
+                "Orientation",
+                options=["Portrait", "Landscape", "Square"],
+                help="Portrait = vertical, Landscape = horizontal"
+            )
+        else:
+            paper_size = "A4"
+            orientation = "Portrait"
     
     # Main content area
     col_map, col_preview = st.columns([1, 1])
@@ -165,38 +199,120 @@ def main():
     
     with col_preview:
         st.subheader("🖼️ Generate Poster")
-        
+
         if lat and lon:
             if st.button("🎨 Create Poster", type="primary", use_container_width=True):
                 with st.spinner("Generating poster... This may take a minute."):
                     try:
-                        # Create poster
-                        output_path = create_poster(
+                        # Create poster figure
+                        fig, _, _ = create_poster_figure(
                             city=city,
                             country=country,
                             theme_name=theme_name,
                             distance=distance,
-                            dpi=dpi,
                             show_progress=False
                         )
-                        
-                        # Display result
-                        st.image(str(output_path), caption=f"{city}, {country}")
-                        
-                        # Download button
-                        with open(output_path, "rb") as f:
-                            st.download_button(
-                                label="⬇️ Download Poster",
-                                data=f,
-                                file_name=output_path.name,
-                                mime="image/png",
-                                use_container_width=True
-                            )
-                        
+
+                        # Store in session state for download
+                        st.session_state["poster_fig"] = fig
+                        st.session_state["poster_city"] = city
+                        st.session_state["poster_theme"] = theme_name
+                        st.session_state["poster_generated"] = True
+
+                        # Create preview PNG
+                        import matplotlib.pyplot as plt
+                        preview_buffer = io.BytesIO()
+                        fig.savefig(
+                            preview_buffer,
+                            format="png",
+                            dpi=72,  # Low DPI for preview
+                            bbox_inches="tight",
+                            pad_inches=0,
+                            facecolor=fig.get_facecolor()
+                        )
+                        preview_buffer.seek(0)
+                        st.session_state["poster_preview"] = preview_buffer.getvalue()
+
                         st.balloons()
-                        
+
                     except Exception as e:
                         st.error(f"Error creating poster: {e}")
+
+            # Show preview and download buttons if poster was generated
+            if st.session_state.get("poster_generated"):
+                # Display preview
+                st.image(
+                    st.session_state["poster_preview"],
+                    caption=f"{st.session_state['poster_city']}"
+                )
+
+                fig = st.session_state["poster_fig"]
+                poster_city = st.session_state["poster_city"]
+                poster_theme = st.session_state["poster_theme"]
+
+                if format_choice == "PNG":
+                    # PNG download
+                    png_buffer = io.BytesIO()
+                    fig.savefig(
+                        png_buffer,
+                        format="png",
+                        dpi=dpi,
+                        bbox_inches="tight",
+                        pad_inches=0,
+                        facecolor=fig.get_facecolor()
+                    )
+                    png_buffer.seek(0)
+
+                    filename = f"{poster_city.lower().replace(' ', '_')}_{poster_theme}.png"
+                    st.download_button(
+                        label="⬇️ Download PNG",
+                        data=png_buffer.getvalue(),
+                        file_name=filename,
+                        mime="image/png",
+                        use_container_width=True
+                    )
+                else:
+                    # PDF downloads
+                    orient_lower = orientation.lower()
+                    col_home, col_print = st.columns(2)
+
+                    with col_home:
+                        pdf_home = export_pdf(
+                            fig=fig,
+                            city=poster_city,
+                            theme_name=poster_theme,
+                            paper_size=paper_size,
+                            orientation=orient_lower,
+                            print_ready=False
+                        )
+                        filename_home = f"{poster_city.lower().replace(' ', '_')}_{poster_theme}_{paper_size}_{orient_lower[:4]}.pdf"
+                        st.download_button(
+                            label="📄 PDF (Home)",
+                            data=pdf_home,
+                            file_name=filename_home,
+                            mime="application/pdf",
+                            use_container_width=True,
+                            help="Clean PDF for home printing"
+                        )
+
+                    with col_print:
+                        pdf_print = export_pdf(
+                            fig=fig,
+                            city=poster_city,
+                            theme_name=poster_theme,
+                            paper_size=paper_size,
+                            orientation=orient_lower,
+                            print_ready=True
+                        )
+                        filename_print = f"{poster_city.lower().replace(' ', '_')}_{poster_theme}_{paper_size}_{orient_lower[:4]}_printready.pdf"
+                        st.download_button(
+                            label="🖨️ PDF (Print-Ready)",
+                            data=pdf_print,
+                            file_name=filename_print,
+                            mime="application/pdf",
+                            use_container_width=True,
+                            help="With 3mm bleed for professional printing"
+                        )
         else:
             st.info("Enter a valid location to generate a poster")
     
