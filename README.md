@@ -2,11 +2,14 @@
 
 Generate beautiful, minimalist map posters for any city in the world.
 
+> **Fork Info:** Dieses Projekt basiert auf [originalankur/maptoposter](https://github.com/originalankur/maptoposter).
+> Erweitert um PDF-Export (Raster/Vektor), EPS-Export, Docker-Support und Streamlit WebApp.
+
 ## Installation mit UV
 
 ```bash
-# Repository klonen (oder Dateien kopieren)
-git clone https://github.com/originalankur/maptoposter.git
+# Repository klonen
+git clone https://github.com/dkd-dobberkau/maptoposter.git
 cd maptoposter
 
 # Mit UV installieren
@@ -146,6 +149,10 @@ uv run ruff format .
 # Linting
 uv run ruff check .
 ```
+
+## Credits
+
+Basiert auf [maptoposter](https://github.com/originalankur/maptoposter) von [@originalankur](https://github.com/originalankur).
 
 ## Lizenz
 
