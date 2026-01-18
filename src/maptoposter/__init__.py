@@ -94,14 +94,27 @@ def list_themes() -> list[str]:
 
 
 def get_coordinates(city: str, country: str) -> tuple[float, float]:
-    """Get latitude and longitude for a city using Nominatim."""
+    """Get latitude and longitude for a city center using Nominatim.
+
+    Uses a cascading search strategy to find the actual city center
+    rather than administrative boundary centroids:
+    1. Train station query - usually located in city center
+    2. Standard city query - fallback for cities without train stations
+    """
     geolocator = Nominatim(user_agent="maptoposter")
-    location = geolocator.geocode(f"{city}, {country}")
-    
-    if location is None:
-        raise ValueError(f"Could not find coordinates for {city}, {country}")
-    
-    return location.latitude, location.longitude
+
+    queries = [
+        f"{city} Hauptbahnhof, {country}",
+        f"{city} Bahnhof, {country}",
+        f"{city}, {country}",
+    ]
+
+    for query in queries:
+        location = geolocator.geocode(query)
+        if location:
+            return location.latitude, location.longitude
+
+    raise ValueError(f"Could not find coordinates for {city}, {country}")
 
 
 def get_edge_colors_by_type(graph, theme: dict[str, Any]) -> list[str]:
