@@ -21,6 +21,11 @@ uv run maptoposter --list-themes
 # Run web app
 uv run streamlit run src/maptoposter/webapp.py
 
+# Docker
+docker compose up -d         # Start container (builds if needed)
+docker compose down          # Stop container
+docker compose logs -f       # View logs
+
 # Development
 uv run pytest                # Run tests
 uv run ruff format .         # Format code

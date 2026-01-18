@@ -1,0 +1,21 @@
+services:
+  webapp:
+    build: .
+    container_name: maptoposter
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./posters:/app/posters
+      - ./themes:/app/themes:ro
+      - maptoposter-cache:/app/cache
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  maptoposter-cache:
